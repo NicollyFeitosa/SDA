@@ -2,6 +2,7 @@ package fs.core;
 
 import fs.disk.Layout;
 import fs.disk.VirtualDisk;
+import fs.meta.Bitmap;
 import fs.meta.Superblock;
 
 import java.io.IOException;
@@ -17,6 +18,10 @@ public class FileSystemSimulator implements AutoCloseable {
         VirtualDisk.create(caminhoImg);
         try (VirtualDisk disco = new VirtualDisk(caminhoImg)) {
             disco.writeBlock(Layout.SUPERBLOCK, Superblock.novo().toBytes());
+            Bitmap blocos = new Bitmap(disco, Layout.BLOCK_BITMAP, Layout.TOTAL_BLOCKS);
+            for (int i = 0; i < Layout.DATA_START; i++) {
+                blocos.marcar(i);
+            }
             disco.sync();
         }
     }
