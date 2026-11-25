@@ -60,6 +60,42 @@ public class FileSystemSimulator implements AutoCloseable {
         });
     }
 
+    public void apagarDiretorio(String caminho) throws IOException {
+        executar("rmdir " + caminho, fs -> {
+            int n = fs.caminhos().resolver(caminho);
+            if (n == Layout.ROOT_INODE) {
+                throw new FsException("nao e possivel remover a raiz");
+            }
+            String nome = fs.nomeNovo(caminho);
+            Directory alvo = fs.diretorio(caminho);
+            if (!alvo.vazio()) {
+                throw new FsException("diretorio nao esta vazio");
+            }
+            fs.pai(caminho).remover(nome);
+            for (int bloco : fs.inodes().ler(n).blocos) {
+                if (bloco >= 0) {
+                    fs.blocos().liberar(bloco);
+                }
+            }
+            fs.inodes().liberar(n);
+        });
+    }
+
+    public void renomear(String caminho, String novoNome) throws IOException {
+        executar("rename " + caminho + " " + novoNome, fs -> {
+            validarNome(novoNome);
+            String nome = fs.nomeNovo(caminho);
+            Directory pai = fs.pai(caminho);
+            if (pai.buscar(nome) == null) {
+                throw new FsException("caminho nao encontrado");
+            }
+            if (pai.buscar(novoNome) != null) {
+                throw new FsException("ja existe");
+            }
+            pai.renomear(nome, novoNome);
+        });
+    }
+
     public List<String> listar(String caminho) throws IOException {
         Fs fs = Fs.sobre(disco);
         SimpleDateFormat data = new SimpleDateFormat("dd/MM HH:mm");
@@ -110,6 +146,37 @@ public class FileSystemSimulator implements AutoCloseable {
 
     public String lerArquivo(String caminho) throws IOException {
         return new String(Fs.sobre(disco).arquivo(caminho).ler(), StandardCharsets.UTF_8);
+    }
+
+    public void copiarArquivo(String origem, String destino) throws IOException {
+        executar("cp " + origem + " " + destino, fs -> {
+            byte[] conteudo = fs.arquivo(origem).ler();
+            String nome = fs.nomeNovo(destino);
+            Directory pai = fs.pai(destino);
+            if (pai.buscar(nome) != null) {
+                throw new FsException("ja existe");
+            }
+            int novo = File.criar(fs.inodes());
+            fs.arquivo(novo).escrever(conteudo);
+            pai.adicionar(nome, novo);
+        });
+    }
+
+    public void apagarArquivo(String caminho) throws IOException {
+        executar("rm " + caminho, fs -> {
+            File arquivo = fs.arquivo(caminho);
+            fs.pai(caminho).remover(fs.nome(caminho));
+            arquivo.liberarBlocos();
+            fs.inodes().liberar(arquivo.numero());
+        });
+    }
+
+    public int blocosLivres() throws IOException {
+        return Fs.sobre(disco).blocos().livres();
+    }
+
+    public int inodesLivres() throws IOException {
+        return Fs.sobre(disco).inodes().livres();
     }
 
     public void fechar() throws IOException {
