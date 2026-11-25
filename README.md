@@ -586,22 +586,6 @@ d     512  25/11 17:19  depois-do-crash
 
 ---
 
-## Resultados Esperados
-
-O simulador mostrou, na prática, como um sistema de arquivos transforma um conjunto de blocos numerados em arquivos e diretórios: o superbloco descreve o disco, os bitmaps controlam o espaço livre, os inodes guardam onde estão os dados e os diretórios associam nomes a inodes. Também ficou claro por que operações como renomear são baratas (só mudam uma entrada de diretório) enquanto copiar exige alocar e gravar blocos novos.
-
-O teste com `crash` demonstrou o papel do journaling: mesmo com o programa interrompido no meio de uma operação que altera seis blocos, o disco voltou a um estado consistente na montagem seguinte, sem precisar verificar o disco inteiro como faria um `fsck`.
-
-**Limitações:**
-
-- Arquivos de no máximo 5 KB (10 ponteiros diretos, sem bloco indireto).
-- 64 inodes e 949 blocos de dados.
-- Uma transação por vez, com no máximo 63 blocos.
-- Histórico do journal mantido apenas em memória, durante a sessão.
-- Sem permissões, links ou caminhos relativos.
-
-**Possíveis melhorias:** blocos indiretos para arquivos maiores; comandos `import`/`export` entre o computador e o disco virtual; `mv` entre diretórios; `rmdir -r`; checksum CRC32 nas transações do journal; testes automatizados com JUnit.
-
 ## Referências
 
 - TANENBAUM, A. S. *Sistemas Operacionais Modernos*. Cap. 4: Sistemas de arquivos.
