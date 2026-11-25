@@ -3,6 +3,7 @@ package fs;
 import fs.core.FileSystemSimulator;
 import fs.core.FsException;
 import fs.disk.VirtualDisk;
+import fs.shell.Shell;
 
 import java.io.IOException;
 
@@ -14,9 +15,7 @@ public class Main {
                 FileSystemSimulator.formatar(caminho);
                 System.out.println("disco formatado: " + caminho);
             }
-            try (FileSystemSimulator fs = FileSystemSimulator.montar(caminho)) {
-                System.out.println("disco montado: " + caminho);
-            }
+            new Shell(caminho, FileSystemSimulator.montar(caminho)).executar();
         } catch (FsException e) {
             System.out.println("erro: " + e.getMessage());
         } catch (IOException e) {
