@@ -75,6 +75,43 @@ public class FileSystemSimulator implements AutoCloseable {
         return linhas;
     }
 
+    public void criarArquivo(String caminho) throws IOException {
+        executar("touch " + caminho, fs -> {
+            String nome = fs.nomeNovo(caminho);
+            Directory pai = fs.pai(caminho);
+            if (pai.buscar(nome) != null) {
+                throw new FsException("ja existe");
+            }
+            pai.adicionar(nome, File.criar(fs.inodes()));
+        });
+    }
+
+    public void escreverArquivo(String caminho, String texto) throws IOException {
+        byte[] conteudo = texto.getBytes(StandardCharsets.UTF_8);
+        if (conteudo.length > File.TAMANHO_MAXIMO) {
+            throw new FsException("arquivo excede 5 KB");
+        }
+        executar("write " + caminho, fs -> {
+            String nome = fs.nomeNovo(caminho);
+            Directory pai = fs.pai(caminho);
+            DirEntry entrada = pai.buscar(nome);
+            int n;
+            if (entrada == null) {
+                n = File.criar(fs.inodes());
+                pai.adicionar(nome, n);
+            } else if (!fs.inodes().ler(entrada.inode()).isArquivo()) {
+                throw new FsException("nao e um arquivo");
+            } else {
+                n = entrada.inode();
+            }
+            fs.arquivo(n).escrever(conteudo);
+        });
+    }
+
+    public String lerArquivo(String caminho) throws IOException {
+        return new String(Fs.sobre(disco).arquivo(caminho).ler(), StandardCharsets.UTF_8);
+    }
+
     public void fechar() throws IOException {
         disco.close();
     }
@@ -106,6 +143,18 @@ public class FileSystemSimulator implements AutoCloseable {
                 throw new FsException("nao e um diretorio");
             }
             return new Directory(dev, inodes, blocos, n);
+        }
+
+        File arquivo(String caminho) throws IOException {
+            int n = caminhos.resolver(caminho);
+            if (!inodes.ler(n).isArquivo()) {
+                throw new FsException("nao e um arquivo");
+            }
+            return arquivo(n);
+        }
+
+        File arquivo(int n) {
+            return new File(dev, inodes, blocos, n);
         }
 
         Directory pai(String caminho) throws IOException {
