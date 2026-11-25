@@ -443,7 +443,21 @@ Shell ── criarDiretorio("/docs") ──► FileSystemSimulator
 - JDK 17 ou superior (`java -version`).
 - Git.
 
-### 4.2 Como baixar, compilar e executar
+### 4.2 Recursos usados na implementação
+
+O simulador usa apenas a biblioteca padrão do Java, sem bibliotecas externas nem Maven ou Gradle: basta o `javac`.
+
+| Recurso | Onde é usado | Para quê |
+| --- | --- | --- |
+| `java.io.RandomAccessFile` | `VirtualDisk` | abrir o `disco.img` e ler/gravar blocos de 512 bytes em qualquer posição (`seek`) |
+| `FileDescriptor.sync()` | `VirtualDisk` | forçar a gravação física no disco, garantindo a ordem do journal |
+| `java.nio.ByteBuffer` | `Superblock`, `Inode`, `Directory`, `JournalHeader` | converter as estruturas em bytes e de volta (inteiros, longs e nomes) |
+| `java.nio.charset.StandardCharsets` | `Directory`, `JournalHeader`, `FileSystemSimulator` | codificar nomes e conteúdo em UTF-8 |
+| `java.util` (`LinkedHashMap`, `ArrayList`, `List`) | `Transaction`, `Journal`, `Directory` | guardar os blocos alterados da transação, o histórico e as entradas de diretório |
+| `java.util.Scanner` | `Shell` | ler os comandos digitados |
+| `record`, `switch` com `->`, text blocks | `DirEntry`, `Shell` | recursos da linguagem a partir do Java 17 |
+
+### 4.3 Como baixar, compilar e executar
 
 ```
 git clone https://github.com/NicollyFeitosa/SDA.git
@@ -461,7 +475,7 @@ java -cp out fs.Main disco.img
 
 Se o `disco.img` não existir, ele é criado e formatado na primeira execução. O projeto também pode ser aberto no IntelliJ IDEA, executando a classe `fs.Main`.
 
-### 4.3 Comandos disponíveis
+### 4.4 Comandos disponíveis
 
 | Comando | Operação do enunciado | Exemplo de saída |
 | --- | --- | --- |
@@ -483,7 +497,7 @@ Se o `disco.img` não existir, ele é criado e formatado na primeira execução.
 
 Mensagens de erro: `caminho nao encontrado`, `ja existe`, `nao e um diretorio`, `nao e um arquivo`, `diretorio nao esta vazio`, `nao e possivel remover a raiz`, `nome invalido`, `nome maior que 28 bytes`, `disco cheio`, `sem inodes livres`, `arquivo excede 5 KB`.
 
-### 4.4 Exemplo de execução
+### 4.5 Exemplo de execução
 
 Saída real do terminal, começando sem `disco.img`:
 
@@ -543,7 +557,7 @@ erro: caminho nao encontrado
 
 Depois da execução, a pasta do projeto contém apenas o `disco.img` (524288 bytes); nenhuma pasta `docs` ou arquivo `notas.txt` foi criado no computador.
 
-### 4.5 Teste de recuperação do journal
+### 4.6 Teste de recuperação do journal
 
 O comando `crash` faz a próxima operação parar logo depois do ponto de commit, antes do checkpoint, como se a energia tivesse caído:
 
@@ -572,7 +586,7 @@ d     512  25/11 17:19  depois-do-crash
 
 ---
 
-## Resultados e conclusão
+## Resultados Esperados
 
 O simulador mostrou, na prática, como um sistema de arquivos transforma um conjunto de blocos numerados em arquivos e diretórios: o superbloco descreve o disco, os bitmaps controlam o espaço livre, os inodes guardam onde estão os dados e os diretórios associam nomes a inodes. Também ficou claro por que operações como renomear são baratas (só mudam uma entrada de diretório) enquanto copiar exige alocar e gravar blocos novos.
 
