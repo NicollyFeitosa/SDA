@@ -35,7 +35,7 @@ Desenvolver em Java um simulador de sistema de arquivos com journaling, que crie
 
 ---
 
-## Parte 1: Introdução ao Sistema de Arquivos com Journaling
+## 1. Introdução ao Sistema de Arquivos com Journaling
 
 ### 1.1 O que é um sistema de arquivos e por que é importante
 
@@ -100,7 +100,7 @@ O simulador funciona como o modo `journal`: todos os blocos alterados, de dados 
 
 ---
 
-## Parte 2: Arquitetura do Simulador
+## 2. Arquitetura do Simulador
 
 ### 2.1 Visão geral e camadas
 
@@ -241,7 +241,7 @@ Em nenhum caso o disco fica pela metade.
 
 ---
 
-## Parte 3: Implementação em Java
+## 3. Implementação em Java
 
 ### 3.1 Estrutura de pacotes
 
@@ -436,7 +436,7 @@ Shell ── criarDiretorio("/docs") ──► FileSystemSimulator
 
 ---
 
-## Parte 4: Instalação e funcionamento
+## 4. Instalação e funcionamento
 
 ### 4.1 Requisitos
 
