@@ -1,7 +1,7 @@
 # Simulador de Sistema de Arquivos com Journaling
 
-**Aluna:** Nicolly Feitosa  ·  **Disciplina:** Sistemas Operacionais  ·  **Professor:** &lt;nome do professor&gt;
-
+**Aluna:** Nicolly Feitosa e João Pedro de Almeida Floriano
+**Disciplina:** Proj de Sistema Operacional  
 **Repositório:** https://github.com/NicollyFeitosa/SDA
 
 ## Resumo
