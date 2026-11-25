@@ -3,6 +3,8 @@ package fs.core;
 import fs.disk.BlockDevice;
 import fs.disk.Layout;
 import fs.disk.VirtualDisk;
+import fs.journal.Journal;
+import fs.journal.Transaction;
 import fs.meta.Bitmap;
 import fs.meta.Inode;
 import fs.meta.InodeTable;
@@ -17,9 +19,11 @@ import java.util.List;
 
 public class FileSystemSimulator implements AutoCloseable {
     private final VirtualDisk disco;
+    private final Journal journal;
 
-    private FileSystemSimulator(VirtualDisk disco) {
+    private FileSystemSimulator(VirtualDisk disco, Journal journal) {
         this.disco = disco;
+        this.journal = journal;
     }
 
     public static void formatar(String caminhoImg) throws IOException {
@@ -31,6 +35,7 @@ public class FileSystemSimulator implements AutoCloseable {
                 blocos.marcar(i);
             }
             Directory.criar(disco, new InodeTable(disco), blocos, Layout.ROOT_INODE);
+            Journal.inicializar(disco);
             disco.sync();
         }
     }
@@ -45,7 +50,9 @@ public class FileSystemSimulator implements AutoCloseable {
             disco.close();
             throw new FsException("disco invalido");
         }
-        return new FileSystemSimulator(disco);
+        Journal journal = new Journal(disco);
+        journal.recover();
+        return new FileSystemSimulator(disco, journal);
     }
 
     public void criarDiretorio(String caminho) throws IOException {
@@ -179,6 +186,14 @@ public class FileSystemSimulator implements AutoCloseable {
         return Fs.sobre(disco).inodes().livres();
     }
 
+    public List<String> historicoJournal() {
+        return journal.historico();
+    }
+
+    public void armarCrash() {
+        journal.armarCrash();
+    }
+
     public void fechar() throws IOException {
         disco.close();
     }
@@ -189,7 +204,9 @@ public class FileSystemSimulator implements AutoCloseable {
     }
 
     private void executar(String descricao, Operacao operacao) throws IOException {
-        operacao.executar(Fs.sobre(disco));
+        Transaction tx = journal.begin(descricao);
+        operacao.executar(Fs.sobre(tx));
+        journal.commit(tx);
     }
 
     @FunctionalInterface
