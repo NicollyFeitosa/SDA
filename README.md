@@ -1,6 +1,6 @@
 # Simulador de Sistema de Arquivos com Journaling
 
-**Aluna:** Nicolly Feitosa e João Pedro de Almeida Floriano
+**Alunos:** Nicolly Feitosa e João Pedro de Almeida Floriano
 
 **Disciplina:** Proj de Sistema Operacional  
 
